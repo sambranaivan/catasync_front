@@ -19,12 +19,14 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isUploading, setIsUploading] = useState<boolean>(false);
   const [statusMessage, setStatusMessage] = useState<{ type: 'success' | 'error'; title: string; message: string } | null>(null);
+  const [uploadComplete, setUploadComplete] = useState<boolean>(false); // Nuevo estado para la vista de éxito
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setStatusMessage(null);
     setUploadProgress(0);
+    // No resetear uploadComplete aquí, para mantener la vista de éxito si ya se mostró.
     if (event.target.files && event.target.files.length > 0) {
       setSelectedFile(event.target.files[0]);
     } else {
@@ -46,18 +48,17 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
 
     setIsUploading(true);
     setStatusMessage(null);
-    setUploadProgress(0); // Iniciar progreso en 0
+    setUploadProgress(0);
 
     const formData = new FormData();
-    formData.append('file', selectedFile); // 'file' es un nombre común para el campo del archivo
+    formData.append('file', selectedFile);
 
     try {
-      setUploadProgress(10); // Mostrar un progreso inicial pequeño
+      setUploadProgress(10); 
 
       const response = await fetch(uploadUrl, {
         method: 'POST',
         body: formData,
-        // El navegador establece Content-Type automáticamente para FormData
       });
 
       if (response.ok) {
@@ -68,12 +69,13 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
           description: successMsg,
         });
         setStatusMessage({ type: 'success', title: '¡Éxito!', message: successMsg });
-        setSelectedFile(null);
+        setSelectedFile(null); 
         if (fileInputRef.current) {
-          fileInputRef.current.value = ""; // Resetear el input de archivo
+          fileInputRef.current.value = ""; 
         }
+        setUploadComplete(true); // Activar la vista de éxito
       } else {
-        setUploadProgress(0); // Resetear progreso en caso de error
+        setUploadProgress(0);
         let errorDetails = '';
         try {
             const errorData = await response.json();
@@ -90,7 +92,7 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
         setStatusMessage({ type: 'error', title: 'Error', message: errorMsg });
       }
     } catch (error: any) {
-      setUploadProgress(0); // Resetear progreso en caso de error de red
+      setUploadProgress(0);
       const errorMsg = `Ocurrió un error de red o un problema inesperado: ${error.message || 'Error desconocido'}`;
       toast({
         title: "Error de Carga",
@@ -102,6 +104,30 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
       setIsUploading(false);
     }
   };
+
+  if (uploadComplete) {
+    return (
+      <Card className="w-full max-w-md shadow-xl text-center">
+        <CardHeader>
+          <div className="mx-auto bg-accent text-accent-foreground rounded-full p-3 w-fit mb-4 shadow-md">
+            <CheckCircle2 size={32} />
+          </div>
+          <CardTitle className="text-3xl font-bold text-accent-foreground">¡Carga Completa!</CardTitle>
+          {statusMessage?.message && (
+            <CardDescription className="text-md pt-1 text-muted-foreground">
+              {statusMessage.message}
+            </CardDescription>
+          )}
+        </CardHeader>
+        <CardContent>
+          <p className="text-foreground">El proceso ha finalizado. Ya puedes cerrar esta ventana.</p>
+        </CardContent>
+         <CardFooter className="text-xs text-muted-foreground justify-center pt-4">
+            <p>Gracias por usar CAT ASYNC.</p>
+        </CardFooter>
+      </Card>
+    );
+  }
 
   return (
     <Card className="w-full max-w-md shadow-xl">
@@ -143,23 +169,16 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
             </div>
           )}
 
-          {(isUploading || (statusMessage?.type === 'success' && uploadProgress === 100)) && (
+          {isUploading && ( // Mostrar progreso solo durante la carga
             <div className="space-y-2 pt-2">
               <Progress value={uploadProgress} aria-label="Progreso de carga" className="w-full h-2.5 [&>div]:bg-accent" />
-              <p className="text-sm text-center text-accent-foreground">{statusMessage?.type === 'success' && uploadProgress === 100 ? '¡Completado!' : (isUploading ? `${uploadProgress}% subiendo...` : `${uploadProgress}%`)}</p>
+              <p className="text-sm text-center text-accent-foreground">{uploadProgress}% subiendo...</p>
             </div>
           )}
 
-          {statusMessage && statusMessage.type !== 'success' && (
-             <Alert variant={statusMessage.type === 'error' ? 'destructive' : 'default'}>
-              {statusMessage.type === 'error' ? <AlertCircle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
-              <AlertTitle className="font-semibold">{statusMessage.title}</AlertTitle>
-              <AlertDescription>{statusMessage.message}</AlertDescription>
-            </Alert>
-          )}
-           {statusMessage && statusMessage.type === 'success' && !isUploading && (
-             <Alert variant='default' className='bg-accent/10 border-accent text-accent-foreground [&>svg]:text-accent-foreground'>
-              <CheckCircle2 className="h-5 w-5" />
+          {statusMessage && statusMessage.type === 'error' && ( // Solo mostrar alertas de error aquí
+             <Alert variant='destructive'>
+              <AlertCircle className="h-5 w-5" />
               <AlertTitle className="font-semibold">{statusMessage.title}</AlertTitle>
               <AlertDescription>{statusMessage.message}</AlertDescription>
             </Alert>
@@ -188,4 +207,3 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
 };
 
 export default FileUploadForm;
-
