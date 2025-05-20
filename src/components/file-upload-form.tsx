@@ -11,7 +11,7 @@ import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucid
 import { useToast } from "@/hooks/use-toast";
 
 interface FileUploadFormProps {
-  uploadUrl: string; // Aunque no se use para la subida real, se mantiene por la interfaz
+  uploadUrl: string;
 }
 
 const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
@@ -46,31 +46,61 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
 
     setIsUploading(true);
     setStatusMessage(null);
-    setUploadProgress(0);
+    setUploadProgress(0); // Iniciar progreso en 0
 
-    // Simulación de carga
-    let currentProgress = 0;
-    const interval = setInterval(() => {
-      currentProgress += 10;
-      if (currentProgress <= 100) {
-        setUploadProgress(currentProgress);
-      } else {
-        clearInterval(interval);
-        setIsUploading(false);
-        const successMsg = `¡Archivo "${selectedFile.name}" subido exitosamente! (Simulado)`;
+    const formData = new FormData();
+    formData.append('file', selectedFile); // 'file' es un nombre común para el campo del archivo
+
+    try {
+      setUploadProgress(10); // Mostrar un progreso inicial pequeño
+
+      const response = await fetch(uploadUrl, {
+        method: 'POST',
+        body: formData,
+        // El navegador establece Content-Type automáticamente para FormData
+      });
+
+      if (response.ok) {
+        setUploadProgress(100);
+        const successMsg = `¡Archivo "${selectedFile.name}" subido exitosamente!`;
         toast({
-          title: "Carga Exitosa (Simulada)",
+          title: "Carga Exitosa",
           description: successMsg,
         });
         setStatusMessage({ type: 'success', title: '¡Éxito!', message: successMsg });
         setSelectedFile(null);
         if (fileInputRef.current) {
-          fileInputRef.current.value = "";
+          fileInputRef.current.value = ""; // Resetear el input de archivo
         }
-        // Asegurarse que la barra llegue al 100% al final
-        setUploadProgress(100); 
+      } else {
+        setUploadProgress(0); // Resetear progreso en caso de error
+        let errorDetails = '';
+        try {
+            const errorData = await response.json();
+            errorDetails = errorData.message || JSON.stringify(errorData);
+        } catch (e) {
+            errorDetails = await response.text();
+        }
+        const errorMsg = `Error al subir el archivo: ${response.status} ${response.statusText}. ${errorDetails ? `Detalles: ${errorDetails}`: ''}`;
+        toast({
+          title: "Error de Carga",
+          description: errorMsg,
+          variant: "destructive",
+        });
+        setStatusMessage({ type: 'error', title: 'Error', message: errorMsg });
       }
-    }, 150); // Simula el progreso cada 150ms
+    } catch (error: any) {
+      setUploadProgress(0); // Resetear progreso en caso de error de red
+      const errorMsg = `Ocurrió un error de red o un problema inesperado: ${error.message || 'Error desconocido'}`;
+      toast({
+        title: "Error de Carga",
+        description: errorMsg,
+        variant: "destructive",
+      });
+      setStatusMessage({ type: 'error', title: 'Error', message: errorMsg });
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   return (
@@ -116,7 +146,7 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
           {(isUploading || (statusMessage?.type === 'success' && uploadProgress === 100)) && (
             <div className="space-y-2 pt-2">
               <Progress value={uploadProgress} aria-label="Progreso de carga" className="w-full h-2.5 [&>div]:bg-accent" />
-              <p className="text-sm text-center text-accent-foreground">{statusMessage?.type === 'success' && uploadProgress === 100 ? '¡Completado!' : `${uploadProgress}% subido`}</p>
+              <p className="text-sm text-center text-accent-foreground">{statusMessage?.type === 'success' && uploadProgress === 100 ? '¡Completado!' : (isUploading ? `${uploadProgress}% subiendo...` : `${uploadProgress}%`)}</p>
             </div>
           )}
 
@@ -158,3 +188,4 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
 };
 
 export default FileUploadForm;
+
