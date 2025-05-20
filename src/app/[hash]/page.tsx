@@ -32,7 +32,7 @@ export default function FileUploadPage({ params }: Props) {
     );
   }
   
-  const uploadUrl = `https://desacriminis.juscorrientes.gov.ar/api/cat/upload/${hash}`;
+  const uploadUrl = `http://localhost:8012/api/cat/upload/${hash}`;
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-4 sm:p-8 md:p-12 bg-background">
