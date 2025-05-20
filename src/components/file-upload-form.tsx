@@ -35,11 +35,11 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
     event.preventDefault();
     if (!selectedFile) {
       toast({
-        title: "No File Selected",
-        description: "Please select a file to upload.",
+        title: "Ningún Archivo Seleccionado",
+        description: "Por favor, selecciona un archivo para subir.",
         variant: "destructive",
       });
-      setStatusMessage({ type: 'error', title: 'Error', message: 'Please select a file to upload.' });
+      setStatusMessage({ type: 'error', title: 'Error', message: 'Por favor, selecciona un archivo para subir.' });
       return;
     }
 
@@ -61,61 +61,58 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
 
     xhr.onload = () => {
       setIsUploading(false);
-      // setUploadProgress(0); // Reset progress visually only on new interaction or success/fail that implies reset
       if (xhr.status >= 200 && xhr.status < 300) {
-        const successMsg = `File "${selectedFile.name}" uploaded successfully!`;
+        const successMsg = `¡Archivo "${selectedFile.name}" subido exitosamente!`;
         toast({
-          title: "Upload Successful",
+          title: "Carga Exitosa",
           description: successMsg,
-          // You can use a specific class for success toasts if defined in globals.css or via a variant
         });
-        setStatusMessage({ type: 'success', title: 'Success!', message: successMsg });
+        setStatusMessage({ type: 'success', title: '¡Éxito!', message: successMsg });
         setSelectedFile(null); 
         if (fileInputRef.current) {
           fileInputRef.current.value = ""; 
         }
-        setUploadProgress(100); // Explicitly set to 100 on success for visual feedback
+        setUploadProgress(100); 
       } else {
-        let errorMessage = `Upload failed. Server responded with status ${xhr.status}.`;
+        let errorMessage = `Carga fallida. El servidor respondió con el estado ${xhr.status}.`;
         try {
           const responseJson = JSON.parse(xhr.responseText);
           errorMessage = responseJson.message || responseJson.error || errorMessage;
         } catch (parseError) {
-          // Response is not JSON or empty, use default error or full response text
-          if(xhr.responseText && xhr.responseText.length < 200) errorMessage = xhr.responseText; // Show short server messages
+          if(xhr.responseText && xhr.responseText.length < 200) errorMessage = xhr.responseText;
         }
         toast({
-          title: "Upload Failed",
+          title: "Carga Fallida",
           description: errorMessage,
           variant: "destructive",
         });
-        setStatusMessage({ type: 'error', title: 'Upload Failed', message: errorMessage });
-        setUploadProgress(0); // Reset progress on error
+        setStatusMessage({ type: 'error', title: 'Carga Fallida', message: errorMessage });
+        setUploadProgress(0);
       }
     };
 
     xhr.onerror = () => {
       setIsUploading(false);
       setUploadProgress(0);
-      const errorMsg = 'Upload failed due to a network error or server issue.';
+      const errorMsg = 'La carga falló debido a un error de red o un problema del servidor.';
       toast({
-        title: "Network Error",
+        title: "Error de Red",
         description: errorMsg,
         variant: "destructive",
       });
-      setStatusMessage({ type: 'error', title: 'Network Error', message: errorMsg });
+      setStatusMessage({ type: 'error', title: 'Error de Red', message: errorMsg });
     };
 
     xhr.onabort = () => {
       setIsUploading(false);
       setUploadProgress(0);
-      const errorMsg = 'Upload was cancelled by the user.';
+      const errorMsg = 'La carga fue cancelada por el usuario.';
        toast({
-        title: "Upload Cancelled",
+        title: "Carga Cancelada",
         description: errorMsg,
         variant: "destructive", 
       });
-      setStatusMessage({ type: 'error', title: 'Upload Cancelled', message: errorMsg });
+      setStatusMessage({ type: 'error', title: 'Carga Cancelada', message: errorMsg });
     };
 
     xhr.open('POST', uploadUrl, true);
@@ -128,13 +125,13 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
         <div className="mx-auto bg-primary text-primary-foreground rounded-full p-3 w-fit mb-4 shadow-md">
           <UploadCloud size={32} />
         </div>
-        <CardTitle className="text-3xl font-bold">File Shuttle</CardTitle>
-        <CardDescription className="text-md pt-1">Upload your file securely and efficiently.</CardDescription>
+        <CardTitle className="text-3xl font-bold">CAT ASYNC</CardTitle>
+        <CardDescription className="text-md pt-1">Sube tu archivo de forma segura y eficiente.</CardDescription>
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="file-upload" className="sr-only">Choose file</label>
+            <label htmlFor="file-upload" className="sr-only">Seleccionar archivo</label>
             <Input
               id="file-upload"
               type="file"
@@ -147,11 +144,11 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
                          file:text-sm file:font-semibold
                          file:bg-primary file:text-primary-foreground
                          hover:file:bg-primary/90
-                         focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-2 /* Standard ShadCN focus */
+                         focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-2 
                          disabled:opacity-50 disabled:cursor-not-allowed"
               aria-describedby="file-description"
             />
-            <p id="file-description" className="text-xs text-muted-foreground mt-1.5">Select a single file to upload.</p>
+            <p id="file-description" className="text-xs text-muted-foreground mt-1.5">Selecciona un único archivo para subir.</p>
           </div>
 
           {selectedFile && !isUploading && (
@@ -164,12 +161,12 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
 
           {(isUploading || (statusMessage?.type === 'success' && uploadProgress === 100)) && (
             <div className="space-y-2 pt-2">
-              <Progress value={uploadProgress} aria-label="Upload progress" className="w-full h-2.5 [&>div]:bg-accent" />
-              <p className="text-sm text-center text-accent-foreground">{statusMessage?.type === 'success' && uploadProgress === 100 ? 'Completed!' : `${uploadProgress}% uploaded`}</p>
+              <Progress value={uploadProgress} aria-label="Progreso de carga" className="w-full h-2.5 [&>div]:bg-accent" />
+              <p className="text-sm text-center text-accent-foreground">{statusMessage?.type === 'success' && uploadProgress === 100 ? '¡Completado!' : `${uploadProgress}% subido`}</p>
             </div>
           )}
           
-          {statusMessage && statusMessage.type !== 'success' && ( // Only show non-success alerts here, success is via toast + progress bar
+          {statusMessage && statusMessage.type !== 'success' && ( 
              <Alert variant={statusMessage.type === 'error' ? 'destructive' : 'default'}>
               {statusMessage.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
               <AlertTitle className="font-semibold">{statusMessage.title}</AlertTitle>
@@ -188,19 +185,19 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
             {isUploading ? (
               <>
                 <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Uploading...
+                Subiendo...
               </>
             ) : (
               <>
                 <UploadCloud className="mr-2 h-5 w-5" />
-                Upload File
+                Subir Archivo
               </>
             )}
           </Button>
         </form>
       </CardContent>
       <CardFooter className="text-xs text-muted-foreground justify-center pt-4">
-        <p>Your file will be sent to a secure server.</p>
+        <p>Tu archivo será enviado a un servidor seguro.</p>
       </CardFooter>
     </Card>
   );

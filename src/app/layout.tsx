@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: 'File Shuttle',
-  description: 'Securely upload your files.',
+  title: 'CAT ASYNC',
+  description: 'Sube tus archivos de forma segura.',
 };
 
 export default function RootLayout({
@@ -24,7 +24,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning> {/* suppressHydrationWarning can be useful with theme changes */}
+    <html lang="es" suppressHydrationWarning> {/* suppressHydrationWarning can be useful with theme changes */}
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans antialiased`}>
         {children}
         <Toaster />
