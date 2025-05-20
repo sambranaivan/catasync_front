@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useRef } from 'react';
@@ -10,7 +11,7 @@ import { UploadCloud, FileText, CheckCircle2, AlertCircle, Loader2 } from 'lucid
 import { useToast } from "@/hooks/use-toast";
 
 interface FileUploadFormProps {
-  uploadUrl: string;
+  uploadUrl: string; // Aunque no se use para la subida real, se mantiene por la interfaz
 }
 
 const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
@@ -47,76 +48,29 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
     setStatusMessage(null);
     setUploadProgress(0);
 
-    const formData = new FormData();
-    formData.append('file', selectedFile); // Server expects the file under 'file' key
-
-    const xhr = new XMLHttpRequest();
-
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        const percentComplete = Math.round((e.loaded / e.total) * 100);
-        setUploadProgress(percentComplete);
-      }
-    };
-
-    xhr.onload = () => {
-      setIsUploading(false);
-      if (xhr.status >= 200 && xhr.status < 300) {
-        const successMsg = `¡Archivo "${selectedFile.name}" subido exitosamente!`;
+    // Simulación de carga
+    let currentProgress = 0;
+    const interval = setInterval(() => {
+      currentProgress += 10;
+      if (currentProgress <= 100) {
+        setUploadProgress(currentProgress);
+      } else {
+        clearInterval(interval);
+        setIsUploading(false);
+        const successMsg = `¡Archivo "${selectedFile.name}" subido exitosamente! (Simulado)`;
         toast({
-          title: "Carga Exitosa",
+          title: "Carga Exitosa (Simulada)",
           description: successMsg,
         });
         setStatusMessage({ type: 'success', title: '¡Éxito!', message: successMsg });
-        setSelectedFile(null); 
+        setSelectedFile(null);
         if (fileInputRef.current) {
-          fileInputRef.current.value = ""; 
+          fileInputRef.current.value = "";
         }
+        // Asegurarse que la barra llegue al 100% al final
         setUploadProgress(100); 
-      } else {
-        let errorMessage = `Carga fallida. El servidor respondió con el estado ${xhr.status}.`;
-        try {
-          const responseJson = JSON.parse(xhr.responseText);
-          errorMessage = responseJson.message || responseJson.error || errorMessage;
-        } catch (parseError) {
-          if(xhr.responseText && xhr.responseText.length < 200) errorMessage = xhr.responseText;
-        }
-        toast({
-          title: "Carga Fallida",
-          description: errorMessage,
-          variant: "destructive",
-        });
-        setStatusMessage({ type: 'error', title: 'Carga Fallida', message: errorMessage });
-        setUploadProgress(0);
       }
-    };
-
-    xhr.onerror = () => {
-      setIsUploading(false);
-      setUploadProgress(0);
-      const errorMsg = 'La carga falló debido a un error de red o un problema del servidor.';
-      toast({
-        title: "Error de Red",
-        description: errorMsg,
-        variant: "destructive",
-      });
-      setStatusMessage({ type: 'error', title: 'Error de Red', message: errorMsg });
-    };
-
-    xhr.onabort = () => {
-      setIsUploading(false);
-      setUploadProgress(0);
-      const errorMsg = 'La carga fue cancelada por el usuario.';
-       toast({
-        title: "Carga Cancelada",
-        description: errorMsg,
-        variant: "destructive", 
-      });
-      setStatusMessage({ type: 'error', title: 'Carga Cancelada', message: errorMsg });
-    };
-
-    xhr.open('POST', uploadUrl, true);
-    xhr.send(formData);
+    }, 150); // Simula el progreso cada 150ms
   };
 
   return (
@@ -144,7 +98,7 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
                          file:text-sm file:font-semibold
                          file:bg-primary file:text-primary-foreground
                          hover:file:bg-primary/90
-                         focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-2 
+                         focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-2
                          disabled:opacity-50 disabled:cursor-not-allowed"
               aria-describedby="file-description"
             />
@@ -165,10 +119,10 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
               <p className="text-sm text-center text-accent-foreground">{statusMessage?.type === 'success' && uploadProgress === 100 ? '¡Completado!' : `${uploadProgress}% subido`}</p>
             </div>
           )}
-          
-          {statusMessage && statusMessage.type !== 'success' && ( 
+
+          {statusMessage && statusMessage.type !== 'success' && (
              <Alert variant={statusMessage.type === 'error' ? 'destructive' : 'default'}>
-              {statusMessage.type === 'success' ? <CheckCircle2 className="h-5 w-5" /> : <AlertCircle className="h-5 w-5" />}
+              {statusMessage.type === 'error' ? <AlertCircle className="h-5 w-5" /> : <CheckCircle2 className="h-5 w-5" />}
               <AlertTitle className="font-semibold">{statusMessage.title}</AlertTitle>
               <AlertDescription>{statusMessage.message}</AlertDescription>
             </Alert>
@@ -180,7 +134,7 @@ const FileUploadForm: React.FC<FileUploadFormProps> = ({ uploadUrl }) => {
               <AlertDescription>{statusMessage.message}</AlertDescription>
             </Alert>
           )}
-          
+
           <Button type="submit" disabled={isUploading || !selectedFile} className="w-full font-semibold text-base py-3 h-auto bg-primary hover:bg-primary/90 text-primary-foreground">
             {isUploading ? (
               <>
